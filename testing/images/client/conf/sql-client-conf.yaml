@@ -1,0 +1,15 @@
+execution:
+  type: streaming
+  result-mode: table
+  parallelism: 1
+
+configuration:
+  execution.checkpointing.interval: 500ms
+  table.dynamic-table-options.enabled: true
+
+deployment:
+  type: standalone
+  response-timeout: 2500
+
+sql-client:
+  verbose: true
