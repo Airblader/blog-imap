@@ -1,0 +1,57 @@
+plugins {
+    id 'java'
+}
+
+group 'org.ververica'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
+}
+
+configurations {
+    extraLibs
+}
+
+jar {
+    enabled = true
+
+    from {
+        configurations.extraLibs.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
+
+task copyToDocker(type: Copy) {
+    from jar
+    into "${rootDir}/testing/images/client/jars"
+}
+
+jar.finalizedBy copyToDocker
+
+dependencies {
+    compileOnly "org.apache.flink:flink-table-common:1.13.1"
+    compileOnly "org.apache.flink:flink-table-api-java-bridge_2.12:1.13.1"
+
+    extraLibs "com.squareup.okhttp3:okhttp:4.8.0"
+    extraLibs "com.sun.mail:jakarta.mail:2.0.0"
+
+    // Lombok
+    compileOnly "org.projectlombok:lombok:1.18.16"
+    annotationProcessor "org.projectlombok:lombok:1.18.16"
+    testCompileOnly "org.projectlombok:lombok:1.18.16"
+    testAnnotationProcessor "org.projectlombok:lombok:1.18.16"
+
+    //
+
+    configurations.compile.extendsFrom(configurations.extraLibs)
+}

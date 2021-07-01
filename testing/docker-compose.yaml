@@ -1,0 +1,45 @@
+version: "3"
+services:
+  sql:
+    image: blog-imap/client
+    build: ./images/client
+    command: "tail -f /dev/null"
+    depends_on:
+      - jobmanager
+      - greenmail
+    links:
+      - greenmail:greenmail
+    environment:
+      FLINK_JOBMANAGER_HOST: "jobmanager"
+  jobmanager:
+    image: flink:1.13.1-scala_2.12
+    hostname: jobmanager
+    expose:
+      - "6123"
+    ports:
+      - "8081:8081"
+    command: jobmanager
+    environment:
+      JOB_MANAGER_RPC_ADDRESS: "jobmanager"
+  taskmanager:
+    image: flink:1.13.1-scala_2.12
+    expose:
+      - "6121"
+      - "6122"
+    depends_on:
+      - jobmanager
+    command: taskmanager
+    links:
+      - jobmanager:jobmanager
+    environment:
+      JOB_MANAGER_RPC_ADDRESS: "jobmanager"
+  greenmail:
+    image: greenmail/standalone:1.6.0
+    ports:
+      - "3025:3025" # SMTP
+      - "3143:3143" # IMAP
+    environment:
+      GREENMAIL_OPTS: >
+        -Dgreenmail.setup.test.all
+        -Dgreenmail.hostname=0.0.0.0
+        -Dgreenmail.users=alice:alice@acme.org,bob:bob@acme.org
